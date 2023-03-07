@@ -1,10 +1,16 @@
-import Box from '@mui/material/Box';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemText from '@mui/material/ListItemText';
-import { Checkbox, Divider, ListSubheader, Typography } from '@mui/material';
-import { FC, useState } from 'react';
+import React from 'react';
+import { FC, useMemo, useState } from 'react';
+import {
+  Box,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Checkbox,
+  Divider,
+  ListSubheader,
+  Typography,
+} from '@mui/material';
 
 export const speciesDict: { [key: string]: string } = {
   'White Hake': 'white-hake',
@@ -26,9 +32,34 @@ interface SpeciesListProps {
 
 export const SpeciesList: FC<SpeciesListProps> = ({ updateSelectedSpecies, favoriteSpecies }) => {
   const [checked, setChecked] = useState(false);
-  const handleToggle = () => {
-    setChecked(!checked);
-  };
+
+  const memoizedListItems = useMemo(
+    () =>
+      checked
+        ? favoriteSpecies.map((species, idx) => (
+            <ListItem disablePadding key={`${species}_${idx}`}>
+              <ListItemButton sx={{ paddingBottom: '1px' }} onClick={() => updateSelectedSpecies(speciesDict[species])}>
+                <ListItemText primary={species} />
+              </ListItemButton>
+            </ListItem>
+          ))
+        : Object.keys(speciesDict).map((species, idx) => (
+            <ListItem disablePadding key={`${species}_${idx}`}>
+              <ListItemButton
+                sx={{
+                  paddingBottom: '1px',
+                  '&:hover': {
+                    background: '#f5f5f5',
+                  },
+                }}
+                onClick={() => updateSelectedSpecies(speciesDict[species])}
+              >
+                <ListItemText primary={species} />
+              </ListItemButton>
+            </ListItem>
+          )),
+    [checked, favoriteSpecies, updateSelectedSpecies]
+  );
 
   return (
     <Box sx={{ width: 220, minWidth: 220, bgcolor: 'background.paper' }}>
@@ -36,40 +67,19 @@ export const SpeciesList: FC<SpeciesListProps> = ({ updateSelectedSpecies, favor
         <ListSubheader sx={{ fontSize: '1.2rem' }}>Species List</ListSubheader>
         <Divider />
         <ListItem
-          secondaryAction={<Checkbox edge="start" size="small" onChange={() => handleToggle()} checked={checked} />}
+          secondaryAction={
+            <Checkbox edge="start" size="small" onChange={() => setChecked(!checked)} checked={checked} />
+          }
           sx={{ justifyContent: 'space-around' }}
         >
           <Typography variant="body2" sx={{ marginLeft: '50px' }}>
             View Favorites
           </Typography>
         </ListItem>
-        {checked
-          ? favoriteSpecies.map((species, idx) => (
-              <ListItem disablePadding key={`${species}_${idx}`}>
-                <ListItemButton
-                  sx={{ paddingBottom: '1px' }}
-                  onClick={() => updateSelectedSpecies(speciesDict[species])}
-                >
-                  <ListItemText primary={species} />
-                </ListItemButton>
-              </ListItem>
-            ))
-          : Object.keys(speciesDict).map((species, idx) => (
-              <ListItem disablePadding key={`${species}_${idx}`}>
-                <ListItemButton
-                  sx={{
-                    paddingBottom: '1px',
-                    '&:hover': {
-                      background: '#f5f5f5',
-                    },
-                  }}
-                  onClick={() => updateSelectedSpecies(speciesDict[species])}
-                >
-                  <ListItemText primary={species} />
-                </ListItemButton>
-              </ListItem>
-            ))}
+        {memoizedListItems}
       </List>
     </Box>
   );
 };
+
+export default React.memo(SpeciesList);
